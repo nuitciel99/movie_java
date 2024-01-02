@@ -1,0 +1,198 @@
+package serivce;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
+import lombok.Getter;
+import util.MovieUtils;
+import vo.Customer;
+import vo.Movie;
+import vo.Reservation;
+
+@Getter
+public class ReservService { // 고객에서 ID 받아와야함
+	private static ReservService reservService = new ReservService();
+
+	public static ReservService getInstance() {
+		return reservService;
+	}
+
+	private List<Reservation> reservations = new ArrayList<Reservation>();
+	private List<Movie> movies = MovieService.getInstance().getMovies();
+	MovieService movieService = new MovieService();
+//	CustomerService customerService = new CustomerService();
+
+	
+	
+
+	public void reservMo() { // 예매 메소드
+		boolean[][] seats = new boolean[movies.size()][16];
+		char[][] UIseats = new char[movies.size()][16];
+//		customerService.getLoginUser();
+		movieService.movieList();
+		int movieNo = 1;
+		try {
+			movieNo = MovieUtils.nextInt("영화를 선택하세요(숫자 입력)");
+		} catch (NumberFormatException e) {
+			movieNo = MovieUtils.nextInt("영화 번호를 숫자로 입력해주세요.");
+		}
+
+		int cnt = 0;
+		for (int i = 0; i < UIseats[movieNo - 1].length; i++) {
+			if (UIseats[movieNo - 1][i] == 0) {
+				UIseats[movieNo - 1][i] = (char) (65 + i);
+			}
+			System.out.print(UIseats[movieNo - 1][i] + " ");
+			if (cnt % 4 == 3) {
+				System.out.println();
+			}
+			cnt++;
+		}
+
+		char seatCol = MovieUtils.nextLine("좌석 선택 (X : 예약된 좌석)").charAt(0);
+
+
+		if (seatCol < 'A' || seatCol > 'P') {
+			System.out.println("잘못된 좌석 선택입니다. 다시 예매하시겠습니까??");
+			int input = MovieUtils.nextInt("1. 다시 예매하기  2. 첫 화면으로 가기");
+			switch (input) {
+			case 1:
+				reservMo();
+				return;
+			case 2:
+				return;
+			default:
+				break;
+			}
+		}
+
+		int seatNumber = (int) seatCol - 65;
+
+		if (!seats[(movieNo - 1)][seatNumber]) {
+			seats[(movieNo - 1)][seatNumber] = true;
+			UIseats[movieNo - 1][seatNumber] = 'X';
+//			System.out.println(UIseats[movieIndex -1][seatNumber]);  // 확인 용 구문
+		} else {
+			System.out.println("이미 예매된 좌석입니다. 다시 예매하시겠습니까??");
+			int input = MovieUtils.nextInt("1. 다시 예매하기  2. 첫 화면으로 가기");
+			switch (input) {
+			case 1:
+				reservMo();
+				return;
+			case 2:
+				return;
+			default:
+				break;
+			}
+		}
+
+//		 id = MovieUtils.nextLine("예매가 가능합니다. 아이디를 입력해주세요");
+		String id = CustomerService.getInstance().getLoginUser().getId();
+		int reserveNo = reservations.size() == 0 ? 1 : reservations.get(reservations.size() - 1).getReservNo() + 1;
+		
+		SimpleDateFormat sdf = new SimpleDateFormat("yy/MM/dd HH:mm:ss");
+		Date date = new Date();
+		String reservDate = sdf.format(date);
+		System.out.println("영화 '" + movies.get(movieNo - 1).getMovie() + "'의 좌석 " + seatCol + " 예매 완료. 예매 아이디 : " + id);
+		reservations.add(new Reservation(reserveNo, seatCol, movieNo, id, reservDate));
+	}
+
+
+	private Reservation findBy(int getReservNo) {
+ 		for (int i = 0; i < reservations.size(); i++) {
+ 			if (getReservNo == reservations.get(i).getReservNo()) {
+ 				return reservations.get(i);
+ 			}
+ 		}
+ 		return null;
+ 	}
+
+	public void Cancel() {
+ 		int getReservNo = MovieUtils.nextInt("취소하실 예약 번호를 입력해주세요");
+ 		Reservation reservation = findBy(getReservNo);
+ 		if (reservation != null) {
+ 			System.out.println(reservation);
+ 		} else if (reservation == null) {
+ 			System.out.println("없는 예약 번호입니다.");
+ 			return;
+ 		}
+ 		switch (MovieUtils.nextLine("정말 예매를 취소하시겠습니까??(y/n)").toUpperCase()) {
+ 		case "Y":
+ //                reservations.get(findBy(getReservNo));
+ 			reservations.remove(reservation);
+ 			break;
+ 		case "N":
+ 			System.out.println("취소가 완료되었습니다.");
+ 			break;
+ 		default:
+ 			break;
+ 		}
+ 	}
+	
+	public List<Reservation> findListBy(String id) {
+		List<Reservation> ret = new ArrayList<>();
+		
+		for(Reservation r : reservations) {
+			if(r.getId().equals(id)) {
+				ret.add(r);
+			}
+		}
+		return ret;
+	}
+	
+	public boolean isReserv(String id, int movieNo) {
+		for(Reservation r : reservations) {
+			if(r.getId().equals(id) && r.getMovieNo() == movieNo) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public void printSeat(int movieNo) {
+		List<Integer> seats = new ArrayList<Integer>();
+		for(Reservation r : reservations) {
+			if(r.getMovieNo() == movieNo) {
+				seats.add(r.getSeatCol());
+			}
+		}
+		System.out.println(seats);
+		for(int i = 0 ; i < 16 ; i++) {
+			if(seats.contains(i)) {
+				System.out.print('X');
+			}
+			else {
+				System.out.print((char)(i + 65));
+			}
+			if(i % 4 == 3)
+			System.out.println();
+		}
+		
+	}
+	public static void main(String[] args) {
+		CustomerService cs = CustomerService.getInstance();
+		cs.setLoginUser(Customer.builder().id("javaman").build());
+		
+		System.out.println(cs.isLogin());
+		
+		ReservService reservService = ReservService.getInstance();
+		System.out.println(reservService.movies);
+		
+		reservService.reservations.add(new Reservation(1, 0, 1, "javaman", new SimpleDateFormat("yy/MM/dd HH:mm:ss").format(System.currentTimeMillis())));
+		reservService.reservations.add(new Reservation(2, 1, 1, "javaman", new SimpleDateFormat("yy/MM/dd HH:mm:ss").format(System.currentTimeMillis())));
+		reservService.reservations.add(new Reservation(3, 3, 1, "javaman", new SimpleDateFormat("yy/MM/dd HH:mm:ss").format(System.currentTimeMillis())));
+		reservService.reservations.add(new Reservation(4, 2, 2, "javaman", new SimpleDateFormat("yy/MM/dd HH:mm:ss").format(System.currentTimeMillis())));
+		
+//		System.out.println(reservService.reservations);
+		reservService.reservations.forEach(System.out::println);
+		
+		reservService.printSeat(1);
+		reservService.Cancel();
+		reservService.printSeat(1);
+		
+		
+	}
+}

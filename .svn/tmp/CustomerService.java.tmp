@@ -1,0 +1,312 @@
+package serivce;
+
+import static util.MovieUtils.*;
+
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.List;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import util.MovieUtils;
+import vo.Customer;
+import vo.Movie;
+import vo.Reservation;
+import vo.Review;
+
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@Data
+@Getter
+
+public class CustomerService {
+	@Getter(lazy = true) // 유틸 세이브 겟터 호출 필요 메서드
+	private static final CustomerService CUSTOMER_SERVICE = new CustomerService();
+	private static CustomerService instance; // 싱글톤
+<<<<<<< .mine
+	private List<Customer> customers = MovieUtils.load("customers");
+||||||| .r94
+=======
+	private List<Customer> customers = MovieUtils.load("customers");
+//	@Getter
+	private Customer loginUser;
+
+>>>>>>> .r120
+	
+	public static CustomerService getInstance() {
+		if (instance == null) {
+			instance = new CustomerService();
+		}
+		return instance;
+
+	}
+//	private CustomerService() {} // private 생성자로 외부에서 인스턴스 생성방지
+	// 좌석 명칭? seatCol 영화 명칭 movie
+//	List<Reservation> reservations = ReservService.getInstance();
+
+//	private List<Customer> customers = new ArrayList<Customer>();
+//	Customer addMember = new Customer(); // 사용자로부터 입력받은 데이터를 넣어줄 객체
+
+	// 회원 가입 레지
+
+	public void register() {
+		Customer addMember = new Customer();
+		// 사용자로부터 입력받을 ID
+<<<<<<< .mine
+		String id = nextLine("=====================================================================================================\n"
+				+ "아이디를 입력하세요 \n=====================================================================================================   ");
+		
+		if (customers == null) {
+			customers= new ArrayList<Customer>();
+		}
+||||||| .r94
+=======
+		if(customers == null) {
+			customers = new ArrayList<Customer>();
+		}
+		String id = nextLine("아이디를 입력하세요 > ");
+>>>>>>> .r120
+
+		// customer에 기존 고객중 ID값이 같은 사람이 있는지 확인
+//		for (int i = 0; i < customers.size(); i++) {
+//			Customer member = customers.get(i);
+		for(Customer member : customers) {
+			if (member.getId().equals(id)) {
+				System.out.println("등록된 사람의 아이디 : " + member.getId());
+				System.out.println("동일한 아이디가 존재합니다");
+				return;
+			}
+		}
+//		[1, 2, 3]
+		addMember.setId(id); // id를 저장
+
+		// 사용자에게 입력받을 패스워드
+		String pw = nextLine("=====================================================================================================\n"
+				+ "비밀번호를 입력하세요 \n=====================================================================================================");
+		addMember.setPw(pw); // 비밀번호를 저장
+		int no = customers.size() == 0 ? 1 : customers.get(customers.size() - 1).getNo() + 1;
+//		int no = customer.get(customer.size()-1).getNo()+1;
+		addMember.setNo(no);
+//		addMember.getRegdate();
+//		System.out.println(addMember.getRegdate());
+//		} // no로 회원 나열 하기 // 아이디에 대한 고유 번호 삭제 수정시 번호로 할수있게
+		System.out.println("====================가입완료================================= 날짜 / 시간============================");
+		System.out.println("회원번호 : " + addMember.getNo() + " 아이디 : " + id + ", 비밀번호 : " + pw + "입니다. / "
+				+ "가입 날짜 / 시간 : " + addMember.getRegdate());
+		System.out.println("=====================================================================================================");
+
+		customers.add(addMember);
+
+//		System.out.println(customers.toString());
+		insert(Customer.builder().no(no).id(id).pw(pw).build());
+		MovieUtils.save();
+	}
+
+	public void login() {
+		
+		Customer foundMember = null;
+		String id = nextLine("=====================================================================================================\n"
+				+ "아이디를 입력하세요 \n=====================================================================================================");
+		String pw = nextLine("=====================================================================================================\n"
+				+ "비밀번호를 입력하세요");
+
+		for (Customer member : customers) {
+			if (member.getId().equals(id)) {
+				foundMember = member;
+				break;
+			}
+		}
+
+		if (foundMember == null) {
+			System.out.println("=====================================================================================================\n"
+					+ "n가입된 사용자의 아이디가 아닙니다");
+			return;
+		}
+
+		if (!foundMember.getPw().equals(pw)) {
+			System.out.println("=====================================================================================================\n"
+					+ "비밀번호가 일치하지 않습니다");
+			return;
+		}
+
+		loginUser = foundMember;
+		System.out.println("=====================================================================================================\n"
+				+ "로그인 성공 \n=====================================================================================================");
+	}
+
+	public void list() { // 예매 확인
+		ReservService reservService = ReservService.getInstance(); // 종윤 예매 서비스 가져오기 싱글톤
+		System.out.println("=====================================================================================================");
+		System.out.println("회원번호           영화명           아이디            좌석번호");
+		System.out.println("=====================================================================================================");
+//		loginUser.setMovieName(movieName);
+		List<Reservation> reservations = reservService.getReservations();
+		for (Reservation r : reservations) {
+			if (loginUser.getId().equals(r.getId())) {
+				System.out.println(r);
+			} else {
+				System.out.println("예매 내역이 없습니다");
+			}
+		}
+		System.out.println("==============================================================");
+//		System.out.println("목록 조회 list() 보이드 진입");
+//		MovieUtils.save();
+		
+		return;
+	}
+
+	// 로그아웃
+	public void logout() {
+		loginUser = null;
+
+	}
+
+	// 로그인 여부 확인
+	public boolean isLogin() {
+		return loginUser != null;
+	}
+
+	//// pk를 통한 단일 탐색 (현재 소스에서는 인덱스를 반환) 인덱스 대신 고객인스턴스 반환
+	private Customer findBy(String pw) {
+		for (int i = 0; i < customers.size(); i++) {
+			if (pw == customers.get(i).getPw()) { // 알트 쉬프트 r 전체 이름 바꾸기
+				return customers.get(i);
+
+			}
+		}
+		return null;
+	}
+
+	public void remove() {
+		ReservService reservService = ReservService.getInstance();
+		MovieService movieService = MovieService.getInstance();
+<<<<<<< .mine
+||||||| .r94
+=======
+		
+		movieService.movieList();
+>>>>>>> .r120
+		List<Reservation> reservations = reservService.getReservations();
+		for (Reservation r : reservations) {
+			if (loginUser.getId().equals(r.getId())) {
+				System.out.println("예매 내역이 있습니다");
+<<<<<<< .mine
+				reservService.cancel();
+				remove1();
+||||||| .r94
+=======
+				int input = MovieUtils.nextInt("1.예매취소 2.회원삭제");
+				switch (input){
+				case 1:
+					reservService.cancel();
+					remove1();
+					break;
+				case 2:
+					remove1();
+					break;
+				}
+			} else {
+				System.out.println("예매 내역이 없습니다");
+				remove1();
+			}
+		}
+		
+		ReviewService reviewService = ReviewService.getInstance();
+//		Review reviews= reviewService.getInstance().get();
+		List<Review> reviews = new ArrayList<Review>();
+		
+		for (Review r : reviews) {
+			if (loginUser.getId().equals(r.getId())) {
+				System.out.println("예매 내역이 있습니다");
+				int input = MovieUtils.nextInt("1.리뷰삭제 2.회원삭제");
+				switch (input){
+				case 1:
+					reviewService.myReviewRemove();
+					remove1();
+					break;
+				case 2:
+					remove1();
+					break;
+				}
+>>>>>>> .r120
+			} else {
+				System.out.println("예매 내역이 없습니다");
+				remove1();
+			}
+		}
+	}
+//		int movieNo = reservService.getReservations().g
+//		String id = loginUser.getId();
+//		if (reservService.isReserv(id, movieNo)) {
+//			reservService.Cancel();
+//		}
+//		try {
+		
+		public void remove1() { // 예매 리뷰 체크후 삭제 진행 구문
+			// 현재 remove 메서드 구문을 타지를 못함
+			String pw = nextLine("삭제 하시려면 비밀번호를 입력하세요");
+			System.out.println("remove() 메서드 체크용" + customers);
+			if (loginUser.getPw().equals(pw)) {
+				customers.remove(loginUser);
+				System.out.println("회원 탈퇴되었습니다.");
+				logout(); // 로그아웃 처리
+			} else {
+				System.out.println("비밀번호가 일치하지 않습니다.");
+			}
+		} 
+	
+	private int insert(Customer customer) {
+		return customers.add(customer) ? 1 : 0;
+	}
+	
+	public void remove1() { // 예매 리뷰 체크후 삭제 진행 구문
+		// 현재 remove 메서드 구문을 타지를 못함
+		String pw = nextLine("삭제 하시려면 비밀번호를 입력하세요");
+		System.out.println("remove() 메서드 체크용" + customers);
+		if (loginUser.getPw().equals(pw)) {
+			customers.remove(loginUser);
+			System.out.println("회원 탈퇴되었습니다.");
+			logout(); // 로그아웃 처리
+		} else {
+			System.out.println("비밀번호가 일치하지 않습니다.");
+		}
+	} 
+	
+//		logout();
+
+//		Customer foundMember = null;
+//
+//		for (Customer member : customers) {
+//			if (member.getPw().equals(pw)) {
+//				foundMember = member;
+//				break;
+//			}
+//		}
+//		if (foundMember == null) {
+//			System.out.println("가입된 사용자의 아이디가 아닙니다");
+//			return;
+//		}
+//		if (!foundMember.getPw().equals(pw)) {
+//			System.out.println("비밀번호가 일치하지 않습니다");
+//			return;
+//		}
+//
+//		Customer s = findBy(pw);
+//		System.out.println("삭제되었습니다  ");
+//		customers.remove(s);
+
+	
+
+	// 싱글톤 에서 뽑아온 내용을 로그인유저에 담는다
+	public Customer getLoginUser() {
+//		CustomerService service = CustomerService.getInstance();
+
+		// TODO Auto-generated method stub
+		return CustomerService.getInstance().loginUser;
+	}
+}

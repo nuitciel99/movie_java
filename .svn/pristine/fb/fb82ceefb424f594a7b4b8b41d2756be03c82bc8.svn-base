@@ -1,0 +1,88 @@
+package serivce;
+
+import util.MovieUtils;
+
+public class CustomerLoginUserTest {
+	
+	public static void main(String[] args) {
+		/**
+		 * 테스트 완료
+		 */
+		CustomerService service = CustomerService.getInstance(); //싱글톤 로그인유저 객체 필요한 메서드
+		ReservService reservService = ReservService.getInstance();
+		ReviewService reviewService = ReviewService.getInstance();
+		MovieService movieService = MovieService.getInstance();
+		// 최초에 할당된 하나의 메모리를 계속 쓰는방법
+
+		while (true) {
+			try {
+				switch (MovieUtils.nextInt("1. 회원가입  2. 로그인")) {
+				case 1:
+					System.out.println("1. 회원가입");
+					service.register();
+					break;
+				case 2:
+					service.login();
+					while (service.isLogin()) {
+						System.out.println(service.getLoginUser()); //값이 제대로 담기는지 테스트
+						switch (MovieUtils.nextInt("1. 영화 순위 2. 예매 3. 예매 확인 4. 리뷰  5.회원 삭제 6. 로그아웃")) {
+						case 1:
+	                        movieService.movieList();
+							System.out.println("                    영화 순위                    ");
+							break;
+							
+						case 2:
+							sub:while(true) {
+								try {
+									switch (MovieUtils.nextInt("1. 예매  2. 예매 취소")) {
+									case 1:
+										reservService.reservMo();
+										break sub;
+									case 2:
+										reservService.Cancel();
+										break sub;
+										
+									default:
+										break;
+									}
+								} catch (NumberFormatException e) {
+									System.out.println("숫자로 입력하세요");
+								}
+								catch (RuntimeException e) {
+									System.out.println(e.getMessage());
+								}
+							}
+							break;
+						case 3:
+//	                            movieService.Customer();
+							service.list();
+							break;
+						case 4:
+							reviewService.review();
+							break;
+						case 5:
+						    service.remove();
+							service.logout();
+							break;
+						case 6:
+							service.logout();
+							break;
+						default:
+							System.out.println("");
+							break;
+						}
+						
+					}
+				}
+				
+			} 
+			catch (NumberFormatException e) {
+				System.out.println("숫자로 입력하세요");
+			}
+			catch (RuntimeException e) {
+				System.out.println(e.getMessage());
+			}
+		}
+	}
+
+}

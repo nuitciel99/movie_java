@@ -1,0 +1,17 @@
+package vo;
+
+import java.io.Serializable;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+@Data
+@AllArgsConstructor
+public class Movie implements Serializable{
+	int movieNo;
+	private String movie;
+//	public String getMovie() {
+//        return movie;
+//    }
+
+}

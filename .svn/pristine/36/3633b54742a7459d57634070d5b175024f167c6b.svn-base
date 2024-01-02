@@ -1,0 +1,32 @@
+package vo;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+//@NoArgsConstructor
+@Data
+@AllArgsConstructor
+public class Reservation {
+	
+//	int no; // 예약 번호 : boolean 배열 인덱스와 같게 함
+//	String id; // 누가
+//	int movieNo; // 어떤 영화를
+//	int seat;  // 좌석번호
+	// 예약번호
+	// 예약일시
+	
+	private int reservNo; // 예약 번호 
+	private int seatCol;  // 좌석
+	private int movieNo;  // 영화 번호
+	private String id;    // 아이디로 주영이형한테 넘겨줘야함
+	private final String reservDate;
+	
+	public String toString() {
+		return String.format("예매 번호 :  %d | 상영관 : %d | 예매자 아이디 : %s | 예매 좌석 : %c | 예매 일시 : %s", reservNo, movieNo, id, (char)(seatCol+65), reservDate);
+	}
+	
+
+}

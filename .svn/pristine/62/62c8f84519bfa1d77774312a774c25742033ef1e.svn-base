@@ -1,0 +1,90 @@
+package project05;
+
+import serivce.CustomerService;
+import serivce.MovieService;
+import serivce.ReservService;
+import serivce.ReviewService;
+import util.MovieUtils;
+import vo.Reservation;
+import vo.Review;
+
+public class MovieMain {
+    public static void main(String[] args) {
+        // 영화 고객 예약
+        // 메인 각
+        // 영화 > 시간, 좌석,(디스플레이 ox)
+        // 고객 > 로그인 (예약좌석 조회)
+        // ()예약 > 예약 , 시간 , 취소, 변경 (영화시작후 예매 x )
+
+<<<<<<< .mine
+//        MovieService movieService = new MovieService();
+        CustomerService service =  CustomerService();
+//        MoiveList moiveList = new MoiveList();
+//        Review review = new Review();
+||||||| .r45
+        MovieService movieService = new MovieService();
+        CustomerService service = new CustomerService();
+        MoiveList moiveList = new MoiveList();
+        Review review = new Review();
+=======
+        MovieService movieService = new MovieService();
+        CustomerService service = new CustomerService();
+        MoiveList moiveList = new MoiveList();
+        ReviewService reviewService = new ReviewService();
+        ReservService reservService = new ReservService();
+>>>>>>> .r72
+
+
+        while (true) {
+            switch (MovieUtils.nextInt("1. 회원가입  2. 로그인")) {
+                case 1:
+                     System.out.println("1. 회원가입");
+                    service.register();
+                    break;
+                case 2:
+                    service.login();
+                    while (service.isLogin()) {
+                        switch (MovieUtils.nextInt("1. 영화 순위 2. 예매 3. 예매 확인 4. 리뷰 작성 5. 로그아웃")) {
+                        case 1:
+//                            moiveList.moiveList();
+                            System.out.println("                    영화 순위                    ");
+                            break;
+
+                        case 2:
+<<<<<<< .mine
+//                            movieService.reservMo();
+||||||| .r45
+                            movieService.reservMo();
+=======
+                        	reservService.reservMo();
+>>>>>>> .r72
+                            break;
+
+                        case 3:
+//                            movieService.Customer();
+                            service.list();
+                            break;
+                        case 4:
+<<<<<<< .mine
+//                            review.review();
+||||||| .r45
+                            review.review();
+=======
+                        	reviewService.review();
+>>>>>>> .r72
+                            break;
+                        case 5:
+                            service.logout();
+                            break;
+                        default:
+                            System.out.println("");
+                            break;
+                        }
+
+
+                        break;
+                    }
+            }
+        }
+    }
+}

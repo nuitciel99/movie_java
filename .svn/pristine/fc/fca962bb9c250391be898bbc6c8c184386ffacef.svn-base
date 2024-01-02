@@ -1,0 +1,182 @@
+package serivce;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import util.MovieUtils;
+import vo.Movie;
+import vo.Reservation;
+@Getter
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public class ReservService {       
+	private static ReservService service = new ReservService(); 
+	public static ReservService getInstance() { // 싱글톤 : 하나의 인스턴스를 활용해 데이터 공유
+		return service;
+	}
+	
+	private List<Reservation> reservations = MovieUtils.load("reservations"); // 예매 정보를 로드
+	private List<Movie> movies = MovieService.getInstance().getMovies();      // 영화 List 받기
+	MovieService movieService = new MovieService();
+
+	public void reservMovie() {          // 예매 method
+		String id = CustomerService.getInstance().getLoginUser().getId();  // CustomerService의 loginUser ID 받기 
+		movieService.movieList();         // 영화 리스트 출력 method
+		System.out.println("=====================================================================================================\n");
+		int movieNo = 0;   // movieNo : 영화 순번 : 엘리멘탈 1, 밀수 2
+		
+		try {
+			movieNo = MovieUtils.nextInt("영화를 선택하세요(숫자 입력) \n=====================================================================================================");
+			printSeat(movieNo);  // 예매자가 보는 좌석 UI method
+		} catch (NumberFormatException e) { // 숫자로 입력 받도록 예외 처리
+			movieNo = MovieUtils.nextInt("=====================================================================================================\n"
+					+ "잘못된 입력입니다. 숫자로 입력해주세요. \n=====================================================================================================");
+			printSeat(movieNo);
+		}catch (RuntimeException e) {
+			System.out.println(e.getMessage());
+		}
+		// 예매자 입력 좌석
+		char InputSeat = MovieUtils.nextLine("=====================================================\n"
+				+ "좌석 선택 (X : 예약된 좌석) \n=====================================================================================================")
+				.toUpperCase().charAt(0);  // 대소문자 구분없이 입력 가능. 
+		// charAt(0) : MovieUtils.nextLine의 String 타입을 charAt으로 char형으로 형변환. 한 문자 입력이므로 index == 0
+		if (InputSeat < 'A' || InputSeat > 'P') { // 16 좌석 : A ~ P 
+			System.out.println("잘못된 좌석 선택입니다. 다시 예매하시겠습니까?? \n=====================================================================================================");
+			int input = MovieUtils.nextInt("1. 다시 예매하기  2. 첫 화면으로 가기 \n=====================================================================================================");
+			switch (input) {      // 잘못된 좌석 입력 시 다시 예매 또는 첫 화면으로 
+			case 1:
+				reservMovie();
+				return;
+			case 2:
+				return;
+			default:
+				break;
+			}
+		}
+		
+		int seatCol = (int) InputSeat - 65;  // Reservation VO에 담을 예매 완료 좌석 데이터 int로 형변환, 65을 빼서 0 ~ 15의 수로 관리 >>> 좌석 UI를 위해  
+		
+		SimpleDateFormat sdf = new SimpleDateFormat("yy/MM/dd HH:mm:ss");
+		Date date = new Date();
+		String reservDate = sdf.format(date);  // 예매 날짜
+		System.out.println("=====================================================================================================\n"
+				+ "영화 '" + movies.get(movieNo - 1).getMovie() + "'의 좌석 " + (char)(seatCol+65) + " 예매 완료. 예매 아이디 : " + id + " | 예매 시간 : " + reservDate);
+		
+		// insert method : 예매할 때 예매번호에 따라 예매 데이터 담기
+		insert(Reservation.builder().seatCol(seatCol).movieNo(movieNo).id(id).reservDate(reservDate).build()); 
+		
+		MovieUtils.save(); // 예매 데이터 저장
+	}
+	
+	// 예매 취소 method
+	public void cancel() {  
+ 		int getReservNo = MovieUtils.nextInt("=====================================================================================================\n"
+ 				+ "취소하실 예약 번호를 입력해주세요 \n=====================================================================================================");
+ 		Reservation reservation = findByReservNo(getReservNo); // findByReservNo method를 통해 입력 예매 번호에 해당하는 예매 데이터 호출
+ 		if (reservation != null) { 
+ 			System.out.println("=====================================================================================================\n"
+ 								+  reservation); // 유저가 취소 하려는 예매 내역 확인용 출력 
+ 		} else if (reservation == null) {  		// 예매 번호가 없을때 다시 cancel method 호출
+ 			System.out.println("=====================================================================================================\n"
+ 					+ "없는 예약 번호입니다.");
+ 			cancel();
+ 			return;
+ 		}
+ 		switch (MovieUtils.nextLine("=====================================================================================================\n"
+ 				+ "정말 예매를 취소하시겠습니까??(y/n)").toUpperCase()) { // 대소문자 구분없이 입력 가능
+ 		case "Y":
+ 			reservations.remove(reservation);  // 해당 예매 건 삭제 
+ 			System.out.println("=====================================================================================================\n"
+ 					+ "예매 취소가 완료되었습니다.");
+ 			break;
+ 		case "N":   // 예매를 원하지 않을 경우 첫 화면 전환 
+ 			System.out.println("=====================================================================================================\n"
+ 					+ "첫 화면으로 전환합니다.");
+ 			break;
+ 		default:
+ 			break;
+ 		}
+ 		MovieUtils.save();   // 삭제 건 저장 
+ 	}
+	
+	public void allCancel() { // CustomerService에서 회원 탈퇴 시 내 예매 모두 취소 
+		List<Reservation> reservations = getReservations(); 
+		if (reservations.isEmpty()) {
+			System.out.println("내 예매 내역이 없습니다.");
+		}
+		else {
+			reservations.removeAll(reservations);
+		}
+		MovieUtils.save();
+	}
+	
+	public void printSeat(int movieNo) {                    // 유저가 보는 예매 좌석 UI method : 영화 번호를 활용해 영화마다 seats UI 다룸
+		List<Integer> seats = new ArrayList<Integer>();      
+		if (reservations == null) {							 
+		    reservations = new ArrayList<Reservation>();
+		}
+		for(Reservation r : reservations) {					
+			if(r.getMovieNo() == movieNo) {					// seats List에 예매된 좌석 데이터 담기 
+				seats.add(r.getSeatCol());
+			}
+		}
+		System.out.println("=================S̲̅C̲̅R̲̅E̲̅E̲̅N̲̅=================\n");
+		System.out.println("         ------------------------------------");
+		for(int i = 0 ; i < 16 ; i++) {
+			if(seats.contains(i)) {							// seats List의 해당 Index에 좌석 데이터가 있을 경우(= 예매가 되어 있을 경우) true
+				System.out.print("          "+'X');			// >>> 해당 좌석 X로 UI 변환
+			}
+			else {
+				System.out.print("          "+(char)(i + 65));  // 해당 Index에 좌석 데이터가 없을 경우 알파벳으로 좌석 UI 출력 
+			}
+			if(i % 4 == 3)
+			System.out.println();
+		}
+		System.out.println("         ------------------------------------");
+	}
+	
+	private Reservation findByReservNo(int getReservNo) {      // 예매 번호로 예매 데이터 조회 메소드
+ 		for (int i = 0; i < reservations.size(); i++) {			// 이 메소드를 통해 예매 취소를 함
+ 			if (getReservNo == reservations.get(i).getReservNo()) {
+ 				return reservations.get(i);
+ 			}
+ 		}
+ 		return null;
+ 	}
+	
+	
+	public List<Reservation> findListBy(String id) { 			// 아이디를 통해 예매 데이터 조회
+		List<Reservation> ret = new ArrayList<>();				// 이 메소드를 통해 CustomerService에서 내 예매 내역 호출
+		for(Reservation r : reservations) {
+			if(r.getId().equals(id)) {
+				ret.add(r);
+			}
+		}
+		return ret;
+	}
+	
+	public boolean isReserv(String id, int movieNo) {			// 아이디와 영화 번호를 활용해 예매 했는지 확인 메소드
+		for(Reservation r : reservations) {						// 이 메소드를 통해 ReviewService에서 리뷰 작성 시 예매한 영화만 리뷰 쓸수 있도록
+			if(r.getId().equals(id) && r.getMovieNo() == movieNo) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private int insert(Reservation reservation) {				// 예매 시 예매 번호를 부여하고 예매 데이터를 예매 List에 담기 
+		int reservNo = reservations.size() == 0 ? 1 : reservations.get(reservations.size()-1).getReservNo() + 1;
+		Reservation reservation2 = Reservation.builder()
+				.reservNo(reservNo)
+				.seatCol(reservation.getSeatCol())
+				.movieNo(reservation.getMovieNo())
+				.id(reservation.getId())
+				.reservDate(reservation.getReservDate())
+				.build();
+		return reservations.add(reservation2) ? 1: 0;
+	}
+}

@@ -1,0 +1,32 @@
+package vo;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+
+ public class Review {
+	
+	int reviewNo; // 글번호
+	String title; // 리뷰제목
+	String content; // 리뷰내용
+	String id;
+//	String movie;// 영화제목
+	int movieNo; //영화넘버
+//	String movieName; 
+	
+
+
+	public String toString() {
+		return String.format("  %d   %s  %s %s %s ", reviewNo, title, content, id, movieNo);
+	}	
+}
+
+
+
+

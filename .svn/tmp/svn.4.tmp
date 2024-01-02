@@ -1,0 +1,236 @@
+package serivce;
+
+import static util.MovieUtils.*;
+
+import java.util.ArrayList;
+
+import java.util.Iterator;
+import java.util.List;
+
+import util.MovieUtils;
+import vo.Customer;
+import vo.Movie;
+import vo.Reservation;
+import vo.Review;
+
+public class ReviewService {
+	private static ReviewService instance;
+
+	static ReviewService getInstance() { // 싱글턴
+		if (instance == null) {
+			instance = new ReviewService();
+		}
+		return instance;
+	}
+
+	// CustomerService 클래스의 인스턴스 생성하고 service에 생성 CustomerService의 싱글톤 인스턴스 가져온다
+	private CustomerService service = CustomerService.getInstance();
+	private MovieService movieService = MovieService.getInstance();
+	private List<Review> reviews = new ArrayList<Review>(); // Review를 저장하기위한 ArrayList생성하고, reviews변수에 할당
+
+//	private Customer loginUser;
+	public void review() {
+		while (true) {
+			try {
+				int input = MovieUtils.nextInt("1.작성 2.목록 3.삭제 4.이전단계");
+				switch (input) {
+				case 1:
+					reviewWrite(); // 리뷰작성
+					break;
+				case 2:
+					reviewList(); // 리뷰조회
+					break;
+				case 3:
+					reviewRemove(); // 리뷰삭제
+					break;
+				case 4:
+					return; // 메인으로 돌아가기
+				default:
+					System.out.println("1~4번 중에 선택하세요.");
+					break;
+
+				}
+			} catch (NumberFormatException e) {
+				System.out.println("숫자로 입력하세요");
+			} catch (Exception e) {
+				e.printStackTrace(); // 오류난거 안 보여주고 위에꺼 출력
+			}
+		}
+	}
+
+	// 리뷰 작성
+	public void reviewWrite() {
+		ReservService reservService = ReservService.getInstance();
+		MovieService.getInstance().movieList(); // movieList 메소드 호출
+		int movieNo = MovieUtils.nextInt("리뷰를 작성할 영화를 선택(예약된 영화만 작성가능합니다)"); // movieNo로 리뷰작성할 영화 선택
+		String id = service.getLoginUser().getId(); // LoginUser에서 ID 가져오기
+		Movie movie = new Movie(movieNo, id); // movieNo와 id를 movie에 담기
+		if (reservService.isReserv(id, movieNo)) { // isReserv가 뭔지 모르겠네 **
+			String title = MovieUtils.nextLine("리뷰 제목을 입력하세요 ↓ "); // 리뷰 제목을 title에 입력
+			String content = MovieUtils.nextLine("리뷰 내용을 입력하세요 ↓"); // 리뷰 내용을 content에 입력
+			int reviewNo = reviews.size() == 0 ? 1 : reviews.get(reviews.size() - 1).getReviewNo() + 1; // 이게 뭐더라 **
+			reviews.add(new Review(reviewNo, title, content, id, movieNo)); // reviews에 글번호, 제목, 내용, 아이디, 영화번호 담기
+			System.out.println("리뷰가 등록되었습니다");
+		} else { // 영화예매하지 않았으면 등록 불가
+			System.out.println("리뷰를 등록할 수 없습니다. 예약한 영화가 없거나 해당 영화의 예매 내역이 없습니다.");
+			return;
+		}
+	}
+
+	// 리뷰 조회
+	public void reviewList() {
+		try {
+			switch (MovieUtils.nextInt("1. 엘리멘탈리뷰모아보기 2.밀수리뷰모아보기 3.전체리뷰 4.이전단계")) {
+			case 1:
+				view1(); // 엘리멘탈 리뷰 조회
+				break;
+			case 2:
+				view2(); // 밀수 리뷰 조회
+				break;
+			case 3:
+				view3(); // 전체 리뷰 조회
+				break;
+			case 4:
+				review();// 이전단계로 돌아가기
+			default:
+				break;
+			}
+			return;
+
+		} catch (NumberFormatException e) {
+			System.out.println("1~4번 중에 선택하세요.");
+		} catch (Exception e) {
+			e.printStackTrace(); // 오류난거 안 보여주고 위에꺼 출력
+		}
+	}
+
+	// 엘리멘탈 리뷰 조회
+	public void view1() {
+		MovieService movieService = MovieService.getInstance();
+		List<Movie> movies = movieService.getMovies(); // Movie List에서 Movies 가져오기
+
+		for (Review review : reviews) {
+			int movieNo = review.getMovieNo(); // review에서 MovieNo 가져오기
+			if (movieNo == 1) { // movieNo가 1(엘리멘탈)인 경우에만 해당 리뷰를 출력
+				System.out.println(String.format("글번호 : %s  제목 : %s 영화 이름 : %s", review.getReviewNo(),
+						review.getTitle(), movies.get(movieNo - 1).getMovie())); // ReviewNo, Title은 review에서 가져오고, 몰라**
+				System.out.println("===============================================");
+				System.out.println(String.format("작성자 : %s  작성시간 : %s ", review.getId(), review.getRegdate()));
+				System.out.println("===============================================");
+				System.out.println(String.format("%s", review.getContent()));
+				System.out.println("===============================================");
+			}
+			if (movieNo == 2) { // movieNo가 2(밀수)인 경우
+				System.out.println("등록된 리뷰가 없습니다.");
+			}
+		}
+	}
+
+	// 밀수 리뷰 조회
+	public void view2() {
+		MovieService movieService = MovieService.getInstance();
+		List<Movie> movies = movieService.getMovies();
+
+		for (Review review : reviews) {
+			int movieNo = review.getMovieNo();
+
+			if (movieNo == 2) { // movieNo가 2(밀수)인 경우에만 해당 리뷰를 출력
+				System.out.println(String.format("글번호 : %s  제목 : %s 영화 이름 : %s", review.getReviewNo(),
+						review.getTitle(), movies.get(movieNo - 1).getMovie()));
+				System.out.println("===============================================");
+				System.out.println(String.format("작성자 : %s  작성시간 : %s ", review.getId(), review.getRegdate()));
+				System.out.println("===============================================");
+				System.out.println(String.format("%s", review.getContent()));
+				System.out.println("===============================================");
+			}
+			if (movieNo == 1) { // movieNo가 1(엘리멘탈)인 경우
+				System.out.println("등록된 리뷰가 없습니다.");
+			}
+		}
+	}
+
+	// 전체리뷰 조회
+	public void view3() {
+		MovieService movieService = MovieService.getInstance();
+		List<Movie> movies = movieService.getMovies();
+		MovieService.getInstance().movieList(); // 무비리스트메소드 호출 이게 바보같은 코드아닌가? 위에 겟인스턴스 했으니
+//		  MovieService.movieList(); // 무비리스트메소드 호출    여기는 안 하는게 아닌가?
+
+		System.out.println("+------------------------- 리뷰 -------------------------+");
+
+		for (Review review : reviews) {
+			int movieNo = review.getMovieNo();
+			toString();
+			System.out.println(String.format("글번호 : %s  제목 : %s 영화 이름 : %s", review.getReviewNo(), review.getTitle(),
+					movies.get(movieNo - 1).getMovie()));
+			System.out.println("===============================================");
+			System.out.println(String.format("작성자 : %s  작성시간 : %s ", review.getId(), review.getRegdate()));
+			System.out.println("===============================================");
+			System.out.println(String.format("%s", review.getContent()));
+			System.out.println("===============================================");
+		}
+		if (reviews.size() == 0) {
+			System.out.println("등록된 리뷰가 없습니다.");
+			return;
+		}
+	}
+
+	// clear 모든요소삭제
+	// remove 특정요소삭제
+	// 리뷰 전체삭제
+	// 구현했으나 사용x
+//	public void allclear() {
+//		CustomerService customerService = CustomerService.getInstance();
+//		Customer customers = customerService.getLoginUser();
+//		
+//		String pw = nextLine("모든 리뷰를 삭제하려면 관리자 비밀번호를 입력하세요.");
+//		if (customers.getPw().equals(pw))  { 
+//			reviews.clear(); // 모든요소 삭제
+//			System.out.println("리뷰전체가 삭제되었습니다.");
+//		}	
+//	}
+
+	// 본인아이디만 전체삭제
+	public void myReviewRemove() {
+		List<Review> myReviews = new ArrayList<Review>(); // 내가 작성한 리뷰 리스트
+		CustomerService customerService = CustomerService.getInstance();
+		Customer customers = customerService.getLoginUser();
+
+		for (Review review : reviews) {
+			String id = review.getId();
+			if (customers.getId().equals(id)) {
+				myReviews.add(review); // 리스트에 내가 작성한 리뷰만 넣기
+
+			}
+		}
+		if (myReviews.isEmpty()) { // isEmpty 문자열이 빈 값이라면 true
+			System.out.println("내가 작성한 리뷰가 없습니다.");
+		} else {
+			myReviews.remove(0);
+		}
+	}
+
+	// 글번호기반 선택 삭제
+	public void reviewRemove() {
+//		String id = CustomerService.getInstance().getLoginUser().getId();
+//		String loginUser = CustomerService.getInstance().getLoginUser().getId();
+
+		CustomerService customerService = CustomerService.getInstance();
+		Customer customers = customerService.getLoginUser();
+		for (Review review : reviews) {
+//			String id = review.getId();
+//			if (customers.getId().equals(id)) {
+			if (customers.getId().equals(review.getId())) {
+				int reviewNo = nextInt("삭제할 글번호를 입력하세요");
+				reviews.remove(reviewNo - 1);
+				System.out.println(reviewNo + "번 리뷰가 삭제되었습니다.");
+				return;
+			} else {
+				System.out.println("해당되는 글번호가 없습니다. 다시입력하세요");
+				return;
+			}
+		}
+
+	}
+
+}

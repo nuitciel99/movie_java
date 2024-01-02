@@ -1,0 +1,254 @@
+package serivce;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import util.MovieUtils;
+import vo.Movie;
+import vo.Reservation;
+import vo.Review;
+
+public class ReviewService {
+	private static ReviewService instance;
+
+	static ReviewService getInstance() {	//싱글턴 
+		if (instance == null) {
+			instance = new ReviewService();
+		}
+		return instance;
+
+	}
+
+
+	private CustomerService service = CustomerService.getInstance();
+	private MovieService movieService = MovieService.getInstance();
+
+	private List<Review> reviews = new ArrayList<Review>();
+
+	
+	public void review() {
+
+
+		while (true) {
+
+			int input = MovieUtils.nextInt("1.작성 2목록 3.삭제");
+			switch (input) {
+			case 1:
+				reviewWrite();
+				break;
+			case 2:
+				reviewList();
+				break;
+			case 3:
+				reviewRemove();
+				break;
+				
+			}
+			break;
+		}
+	}
+
+	// 리뷰 작성
+	public void reviewWrite() {
+		ReservService reservService = ReservService.getInstance();
+		MovieService.getInstance().movieList(); // 무비리스트메소드 호출
+		int movieNo = MovieUtils.nextInt("리뷰를 작성할 영화를 선택(예약된 영화만 작성가능합니다)");
+		String id = service.getLoginUser().getId();	
+		Movie movie = new Movie(movieNo, id);			
+		if (reservService.isReserv(id, movieNo)) {
+			String title = MovieUtils.nextLine("리뷰 제목을 입력하세요 ↓ ");
+			String content = MovieUtils.nextLine("리뷰 내용을 입력하세요 ↓");
+			int reviewNo = reviews.size() == 0 ? 1 : reviews.get(reviews.size() - 1).getReviewNo() + 1;
+			reviews.add(new Review(reviewNo, title, content,id, movieNo));
+			// 무비네임 불러오는거 모르겠다**************
+		} else { 
+			System.out.println("리뷰를 등록할 수 없습니다.");
+
+		}
+	}
+	
+
+	// 리뷰 조회
+	// 영화를 선택(영화리스트불러와서?) 어떤 영화 리뷰할지 --무비리스트에서 메소드호출
+	public void reviewList(){
+		switch (MovieUtils.nextInt("1. 엘리멘탈리뷰모아보기 2.밀수리뷰모아보기 3.전체리뷰")) {
+		case 1:
+			view1();
+			break;
+		case 2:			
+			view2();//밀수 리뷰만
+			break;
+		case 3:			
+			view3(); //전체 리뷰
+			break;
+		case 4:
+			review();//돌아가기
+		default:
+			break;
+		}
+		return;
+		
+	}
+	
+	
+	
+	
+	
+	//엘리멘탈 리뷰만
+//	public  void view1() { 
+//		
+//		 MovieService movieService = MovieService.getInstance();
+////		 MovieService.getInstance().getMovies();
+//		List<Movie> movieNo =  MovieService.getInstance().getMovies();
+////		System.out.println(movieNo);
+//		if(reviews.equals(movieNo)) {
+//			
+//			for (Review b : reviews) {	
+//				toString();
+//				System.out.println(String.format("글번호 : %s  제목 : %s 작성자 : %s  영화 : %d", b.getReviewNo(), b.getTitle(), b.getId(), b.getMovieNo()));
+//				System.out.println();
+//				System.out.println(String.format("%s", b.getContent()));
+//				System.out.println("===============================================");
+//			}
+//	}			
+//}
+		
+	
+	
+	// 엘리멘탈 리뷰만
+	public void view1() {
+	    MovieService movieService = MovieService.getInstance();
+	    List<Movie> movies = movieService.getMovies();
+
+	    for (Review review : reviews) {
+	        // 리뷰의 영화 번호를 가져옵니다.
+	        int movieNo = review.getMovieNo();
+
+	        // movieNo가 1인 경우에만 해당 리뷰를 출력합니다.
+	        if (movieNo == 1) {
+	            System.out.println(String.format("글번호 : %s  제목 : %s 영화 이름 : %s", review.getReviewNo(), review.getTitle(), movies.get(movieNo-1).getMovie()));
+	            System.out.println("===============================================");
+	            System.out.println(String.format("작성자 : %s  작성시간 : %s ", review.getId(), review.getRegdate()));
+	            System.out.println("===============================================");
+	            System.out.println(String.format("%s", review.getContent()));
+	            System.out.println("===============================================");
+	        }
+	    }
+	}
+
+
+	// 밀수 리뷰만
+	public void view2() {
+	    MovieService movieService = MovieService.getInstance();
+	    List<Movie> movies = movieService.getMovies();
+
+	    for (Review review : reviews) {
+	        // 리뷰의 영화 번호를 가져옵니다.
+	        int movieNo = review.getMovieNo();
+
+	        // movieNo가 2인 경우에만 해당 리뷰를 출력합니다.
+	        if (movieNo == 2) {
+	            System.out.println(String.format("글번호 : %s  제목 : %s 영화 이름 : %s", review.getReviewNo(), review.getTitle(), movies.get(movieNo-1).getMovie()));
+	            System.out.println("===============================================");
+	            System.out.println(String.format("작성자 : %s  작성시간 : %s ", review.getId(), review.getRegdate()));
+	            System.out.println("===============================================");
+	            System.out.println(String.format("%s", review.getContent()));
+	            System.out.println("===============================================");
+	        }
+	    }
+	}
+	
+	
+	
+	
+	
+	// 전체리뷰 
+	public void view3() {
+		  MovieService movieService = MovieService.getInstance();
+		  List<Movie> movies = movieService.getMovies();
+		   
+//		ReservService reservService = ReservService.getInstance();
+//		List<Reservation> reservations = reservService.getReservations();	
+//		MovieService movieService = MovieService.getInstance();        //이거 원래 활성화?
+		
+		
+		MovieService.getInstance().movieList(); // 무비리스트메소드 호출
+
+
+		System.out.println("+------------------------- 리뷰 -------------------------+");
+//		int movieNo =0; //movieNo 받아와야됨
+		
+			for (Review review : reviews) {
+				int movieNo = review.getMovieNo();
+				
+				toString();
+			    System.out.println(String.format("글번호 : %s  제목 : %s 영화 이름 : %s", review.getReviewNo(), review.getTitle(), movies.get(movieNo-1).getMovie()));
+	            System.out.println("===============================================");
+	            System.out.println(String.format("작성자 : %s  작성시간 : %s ", review.getId(), review.getRegdate()));
+	            System.out.println("===============================================");
+	            System.out.println(String.format("%s", review.getContent()));
+	            System.out.println("===============================================");
+	            
+	            
+//				System.out.println(String.format("글번호 : %s  제목 : %s 작성자 : %s  ", b.getReviewNo(), b.getTitle()));
+//				System.out.println("===============================================");
+//				
+//				System.out.println("===============================================");	
+//				System.out.println(String.format("%s", b.getContent()));
+//				System.out.println("===============================================");
+		
+	}
+		if (reviews.size() == 0) {
+			System.out.println("등록된 리뷰가 없습니다.");
+			return;
+		}
+	}
+	
+	
+	
+	// 아이디를 통해 글을 썼는지 확인
+	public boolean reviewCheck(String id, int reviewNo) {
+	        for(Review r : reviews) {
+	            if(r.getId().equals(id) && r.getReviewNo() == reviewNo) {
+	                return true;
+	            }
+	        }
+	        return false;
+	    }
+				
+
+
+	public void reviewRemove() {  //전체삭제
+//		int movieNo = MovieUtils.nextInt("삭제할 글번호를 입력해주세요.");
+//		Review review 
+		
+		
+		
+//		private Reservation findBy(int getReservNo) {
+//			for (int i = 0; i < reservations.size(); i++) {
+//				if (getReservNo == reservations.get(i).getReservNo()) {
+//					return reservations.get(i);
+//				}
+//			}
+//			return null;
+//		}
+//
+//		public void Cancel() {
+//			int getReservNo = MovieUtils.nextInt("취소하실 예약 번호를 입력해주세요");
+//			Reservation reservation = findBy(getReservNo);
+//			if (reservation != null) {
+//				System.out.println(reservation);
+//			} else if (reservation == null) {
+//				System.out.println("없는 예약 번호입니다.");
+//				return;
+//			}
+//			switch (MovieUtils.nextLine("정말 예매를 취소하시겠습니까??").toUpperCase()) {
+//			case "Y":
+////	                reservations.get(findBy(getReservNo));
+//				reservations.remove(reservation);
+//				System.out.println("취소가 완료되었습니다.");
+	}
+
+}	
+

@@ -1,0 +1,70 @@
+package util;
+
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+
+import serivce.CustomerService;
+
+
+public class MovieUtils {
+
+	private static Scanner scanner = new Scanner(System.in);
+
+	public static String nextLine(String msg) { // 인스턴스 변수는 클래스 메소드에서 호출이 불가
+		System.out.println(msg);
+		return scanner.nextLine(); // 따라서 6line에서 static 선언
+	}
+
+	public static int nextInt(String msg) {
+//		System.out.println();
+		return Integer.parseInt(nextLine(msg));
+	}
+
+	public static void main(String[] args) {
+		String str = "가나다라";
+		System.out.println(chkhangle(str));
+	}
+
+	public static boolean chkhangle(String str) {
+		for (int i = 0; i < str.length(); i++) {
+			if (str.charAt(i) < '가' || str.charAt(i) > '힣')
+
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public static int chkRange(int value) {
+		return chkRange(0, 100, value);
+	}
+
+	public static int chkRange(int start, int end, int value) {
+		if (value < start || value > end) {
+			
+
+		}
+		return value;
+	}
+	// 제네릭 //  예외처리 
+	public static <T> void save() {
+		Map<String, List<?>> map = new HashMap<>();
+		// 고객서비스에서 겟터로 불러옴 
+		map.put("customesr", CustomerService.getCUSTOMER_SERVICE().getCustomers());
+		try {
+			ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("data.ser"));
+			oos.writeObject(map);
+			oos.close();
+			// data.에 저장
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+			//예외처리 오류 발생시 콘솔창 에러 알림 
+		}
+	}
+}
