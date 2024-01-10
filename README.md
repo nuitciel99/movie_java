@@ -26,3 +26,15 @@
 
   - private 생성자 때문에 상속이 어려움.
     싱글톤 패턴은 기본 생성자를 private로 만들었기 때문에 상속을 통한 자식 클래스를 만들 수 없다는 문제점이 있음. 즉, 자바의 객체지향 언어의 장점 중 하나인 다형성을 적용하지 못한다는 문제로 이어짐.
+
+# 회원 가입
+
+![api 목록](./readMeImgs/signup.png)
+
+# 영화 예매
+
+![api 목록](./readMeImgs/reservation.png)
+
+# 예매 취소
+
+![api 목록](./readMeImgs/cancle.png)
